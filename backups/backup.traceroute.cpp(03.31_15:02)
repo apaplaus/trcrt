@@ -1,0 +1,246 @@
+#include <iostream>
+#include <string>
+#include <sys/socket.h>
+#include <sstream>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <netinet/ip_icmp.h>
+#include <netinet/udp.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <cstring>
+#include <arpa/inet.h>
+#include <fstream>
+#include <algorithm>
+#include <netdb.h>
+#include <sys/stat.h>
+#include <ctime>
+
+
+#define SO_EE_ORIGIN_NONE    0
+		  #define SO_EE_ORIGIN_LOCAL   1
+		  #define SO_EE_ORIGIN_ICMP    2
+		  #define SO_EE_ORIGIN_ICMP6   3
+
+		  struct sock_extended_err
+		  {
+		      uint32_t ee_errno;   /* error number */
+		      uint8_t  ee_origin;  /* where the	error originated */
+		      uint8_t  ee_type;	   /* type */
+		      uint8_t  ee_code;	   /* code */
+		      uint8_t  ee_pad;	   /* padding */
+		      uint32_t ee_info;	   /* additional information */
+		      uint32_t ee_data;	   /* other data */
+		      /* More data may follow */
+		  };
+
+		  struct sockaddr *SO_EE_OFFENDER(struct sock_extended_err *);
+
+
+#define DEBUG
+#ifdef DEBUG
+#define DEB(x) do{\
+  std::cerr<< x;}\
+  while(0)
+#endif
+using namespace std;
+
+const int ONE = 1;
+
+void  GetIp(){
+  char buffer[34]{0};
+  int buflen=34;
+   int sock = socket(AF_INET, SOCK_DGRAM, 0);
+
+   const char* kGoogleDnsIp = "8.8.8.8";
+   uint16_t kDnsPort = 53;
+   struct sockaddr_in serv;
+   memset(&serv, 0, sizeof(serv));
+   serv.sin_family = AF_INET;
+   serv.sin_addr.s_addr = inet_addr(kGoogleDnsIp);
+   serv.sin_port = htons(kDnsPort);
+
+   int err = connect(sock, (const sockaddr*) &serv, sizeof(serv));
+
+   sockaddr_in name;
+   socklen_t namelen = sizeof(name);
+   err = getsockname(sock, (sockaddr*) &name, &namelen);
+
+   const char* p = inet_ntop(AF_INET, &name.sin_addr, buffer, buflen);
+
+   cout<<"address: "<<p<<endl;
+   close(sock);
+}
+
+string ConvertToBin(char ch){
+  string result {};
+  for(int i =7;i>=0;i--){
+    result.append(1, (ch>>i & 0x1) + '0');
+  }
+  return result;
+}
+
+int main (int argc, char *argv[])
+{
+  // GetIp();
+  // cout<<sizeof(struct icmphdr)<<"\n";
+  // exit(-1);
+  //FIXME parse arguments
+  auto dest_addr = argv[1];
+  if (argc >4  || argc < 2){
+      cerr<<"Wrong parameters"<<endl;
+      exit (-1);
+  }
+
+  int send_sock = 0;
+  if ((send_sock = socket (AF_INET, SOCK_DGRAM, 0)) <= 0)
+  {
+   cerr<< "ERROR: creating send socket"<<"\n";
+   exit(-1);
+  }
+  int recv_sock=0;
+  if ((recv_sock = socket (AF_INET, SOCK_RAW, IPPROTO_ICMP)) <= 0)
+  {
+   cerr<< "ERROR: creating recieve socket"<<"\n";
+   exit(-1);
+  }
+  char buf[1024] = { 0 };
+  struct ip *ip_hdr = (struct ip *) buf;
+  char ttl = 1;
+
+  // if (setsockopt (send_sock, IPPROTO_IP, IP_HDRINCL, const_cast<const int *>(&ttl), sizeof (ttl)) < 0){
+  //   cerr<<"Error: setting HDRINCL"<<endl;
+  //   close(recv_sock);
+  //   close(send_sock);
+  //   exit(-1);
+  // }
+
+  struct sockaddr_in addr;
+  addr.sin_port = htons (6677);
+  addr.sin_family = AF_INET;
+  inet_pton (AF_INET, dest_addr, &(addr.sin_addr));
+  if(setsockopt(send_sock, IPPROTO_IP, IP_RECVERR, &ONE,sizeof(ONE))){
+    cerr<<"ERROR: can't set IP_RECVERR option for socket\n";
+    close(send_sock);
+    close(recv_sock);
+    exit(-1);
+  }
+
+  while (1)
+    {
+      // ip_hdr->ip_hl = 5;
+      // ip_hdr->ip_v = 4;
+      // ip_hdr->ip_tos = 0;
+      // ip_hdr->ip_len = sizeof(struct ip) + sizeof(struct udphdr);
+      // ip_hdr->ip_id = 1000;
+      // ip_hdr->ip_off = 0;
+      // ip_hdr->ip_p = IPPROTO_UDP;
+      // ip_hdr->ip_sum = 0;
+      // ip_hdr->ip_ttl = htons(ttl);
+      // inet_pton (AF_INET, "10.0.2.15", &(ip_hdr->ip_src));
+      // inet_pton (AF_INET, dest_addr, &(ip_hdr->ip_dst));
+      // inet_pton (AF_INET, const_cast<const char *>(&ttl), &(ip_hdr->ip_ttl));
+      if(setsockopt(send_sock, IPPROTO_IP, IP_TTL, &ttl,sizeof(ttl))){
+        cerr<<"ERROR: can't set IP_TTL option for socket\n";
+        close(send_sock);
+        close(recv_sock);
+        exit(-1);
+      }
+
+      struct udphdr * udphdr = static_cast<struct udphdr *>(static_cast<void *>(buf + sizeof(struct ip)));
+      udphdr->uh_dport       = htons(6677);
+      udphdr->uh_sport     = htons(0);
+      udphdr->uh_sum    = 0;
+      udphdr->uh_ulen      = htons(sizeof(struct udphdr));
+      DEB("Start sending"<<endl);
+      sendto (send_sock, buf, sizeof(struct udphdr) + sizeof(struct ip), 0, (struct sockaddr*) &addr, sizeof addr);
+      DEB("end sending"<<endl);
+
+      char buff[100] = { 0 };
+      struct sockaddr_in addr2;
+      struct icmphdr *icmphd2 = (struct icmphdr *) (buff + 20);
+      struct msghdr msg;
+      struct cmsghdr *cmsg;
+      struct sock_extended_err *sock_err;
+      char buffer[1024];
+      struct iovec iov;
+      struct sockaddr_in remote;
+      iov.iov_base = &icmphd2;
+      iov.iov_len = sizeof(struct icmphdr);
+      msg.msg_name = (void*)&remote;
+      msg.msg_namelen = sizeof(remote);
+      msg.msg_iov = &iov;
+      msg.msg_iovlen = 1;
+      msg.msg_flags = 0;
+      msg.msg_control = buffer;
+      msg.msg_controllen = sizeof(buffer);
+
+      int recieved_data_size=0;
+      recieved_data_size = recvmsg(send_sock, &msg, MSG_ERRQUEUE);
+      DEB("recieved_data_size: "<<recieved_data_size<<endl);
+      for (cmsg = CMSG_FIRSTHDR(&msg);cmsg; cmsg = CMSG_NXTHDR(&msg, cmsg))
+      {
+        DEB(__LINE__<<endl);
+        if (cmsg->cmsg_level == SOL_IP || cmsg->cmsg_level == IPPROTO_IP)
+        {
+          DEB(__LINE__<<endl);
+          if (cmsg->cmsg_type == IP_RECVERR)
+          {
+            DEB(__LINE__<<endl);
+            cerr<<"We got IP_RECVERR message\n";
+            sock_err = (struct sock_extended_err*)CMSG_DATA(cmsg);
+            if (sock_err->ee_origin == SO_EE_ORIGIN_ICMP)
+            {
+              switch (sock_err->ee_type)
+              {
+                case ICMP_NET_UNREACH:
+                    /* Hendle this error */
+                  cerr<< "Network Unreachable Error\n";
+                    break;
+                case ICMP_HOST_UNREACH:
+                    /* Hendle this error */
+                    cerr<< "Host Unreachable Error\n";
+                    break;
+                default:
+                  cerr<<"Default branch\n";
+                /* Handle all other cases. Find more errors :
+                 * http://lxr.linux.no/linux+v3.5/include/linux/icmp.h#L39
+                 */
+              }
+            }
+            break;
+          }
+        }
+      }
+      // socklen_t len = sizeof (struct sockaddr_in);
+      // recvfrom (send_sock, buff, sizeof(buff), 0, (struct sockaddr*) &addr2, &len);
+      // if (icmphd2->type != 0)
+      // {
+      //   printf ("hop limit:%d Address:%s\n", ttl, inet_ntoa (addr2.sin_addr));
+      // }
+      // else
+      // {
+      //   printf ("Reached destination:%s with hop limit:%d\n", inet_ntoa (addr2.sin_addr), ttl);
+      //   char buffer[20] {0};
+      //   for(char i : buffer){
+      //     cout<<ConvertToBin(i) <<" |"<<endl;
+      //   }
+      //   // inet_ntop(AF_INET, &buff.sin_addr, buffer, sizeof(buffer));
+      //   // cout<<"addr: "<<buffer<<endl;
+      //   close(recv_sock);
+      //   close(send_sock);
+      //   exit (0);
+      // }
+      if(ttl >=30)
+      {
+        cerr<<"TTL limit reached!\n";
+        close(send_sock);
+        close(recv_sock);
+        break;
+      }
+      ttl++;
+      sleep(3);
+    }
+
+  return 0;
+}
