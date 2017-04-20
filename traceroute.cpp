@@ -90,6 +90,7 @@ int ParseArgs(char** argv,int argc,char &max_ttl,char &ttl, char * &dest_addr){
 	  arg_count+=2;
     }
   }
+  //control arguments count
   if(arg_count != argc)
 	return -1;
   dest_addr = argv[argc-1];
