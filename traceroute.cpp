@@ -75,12 +75,14 @@ int ParseArgs(char** argv,int argc,char &max_ttl,char &ttl, char * &dest_addr){
   int arg_count = 2;
   for(int i =1;i<argc;i++){
     DEB("arg["<<i<<"] = "<<argv[i]<<endl);
+	//checking for '-f' argument
     if (!strcmp(argv[i], "-f")) {
       DEB("WE FIND '-f'!");
 	  if(i+1 == argc) return -1;
       ttl = static_cast<char>(atoi(argv[i+1]));
 	  arg_count +=2;
     }
+	//checking for '-m' argument
     else if (!strcmp(argv[i], "-m")) {
       DEB("WE FIND '-m'!");
 	  if(i+1 == argc) return -1;
