@@ -171,6 +171,8 @@ int main (int argc, char *argv[])
     struct icmphdr v4;
   };
   int counter =1;
+
+
   while (ttl <= MAX_TTL)
   {
       if(prot_ver6){
@@ -267,6 +269,15 @@ int main (int argc, char *argv[])
               if(sock_err->ee_type == ICMP6_TIME_EXCEEDED &&
                  sock_err->ee_code == ICMP6_TIME_EXCEED_TRANSIT)
               {
+				 
+  			  	//converting target address to host name
+  			  	char hostname[50]  {0};
+  			  	char servname[50]  {0};
+			  	if(getnameinfo((const sockaddr *)source_addr,sizeof(source_addr),hostname,50,servname,50,0)== 0)
+			  	{
+			   	  cout<<"target host name :"<<hostname<<endl;	
+		      	}
+			  	else cout<<"Can't get target host name\n";
                 fprintf(stdout, "%2d   %s   %.3f ms\n",counter,response_source_addr,time_delta );
                 DEB( "ICMP time exceeded Error\n");
               }
@@ -314,6 +325,14 @@ int main (int argc, char *argv[])
 
               // TTL was exceeded
               if(sock_err->ee_type == ICMP_TIME_EXCEEDED && sock_err->ee_code == ICMP_EXC_TTL){
+				//converting target host addr to string
+				char hostname[50]{0};
+  			  	char servname[50]  {0};
+			  	if(getnameinfo((const sockaddr *)source_addr,sizeof(source_addr),hostname,50,servname,50,0)== 0)
+			  	{
+			   	  cout<<"target host name :"<<hostname<<endl;	
+		      	}
+			 	else cout<<"Can't get target host name\n";
                 fprintf(stdout, "%2d   %s   %.3f ms\n",counter,response_source_addr,time_delta );
                 DEB( "ICMP time exceeded Error\n");
               }
