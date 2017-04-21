@@ -1,0 +1,40 @@
+.TH TRACE 1
+.SH NAME
+trace \- Small application for tracing a net path.
+.SH SYNOPSIS
+.B trace
+[\fB\-f\fR \fIFIRST_TTL\fR]
+[\fB\-m\fR \fIMAX_TTL\fR]
+.IR address
+.SH DESCRIPTION
+.B trace
+tracks the route packets taken from an IP network on their way to a given host.
+It's uses UDP protocol for sending ICMP packets to host with incrementing TTL of each packet.
+.SH OPTIONS
+.TP
+.BR -f \ \fIFIRST_TTL\fR
+Specifies what TTL to use for the first packet. Default value is 1.
+.TP
+.BR -m \ \fIMAX_TTL\fR
+Specifies maximum TTL value for packets. Default value is 30.
+.TP
+.BR address
+IPV4/IPV6 host address.
+.SH EXAMPLES
+To trace path to address 172.217.23.238 with  first TTL 3 use:
+.PP
+.nf
+.RS
+trace -f 3 172.217.23.238
+.RE
+.fi
+.PP
+To trace path to 2a00:1450:400d:802::1000 with max TTL 10 use:
+.PP
+.nf
+.RS
+trace -m 10 2a00:1450:400d:802::1000
+.RE
+.fi
+.SH SEE ALSO
+.BR traceroute "(8), " tracepath "(8), " ping "(8)."
