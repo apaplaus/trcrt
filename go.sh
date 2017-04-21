@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./traceroute -m 4 -f 2 8.8.8.8
+./trace -m 4 -f 2 8.8.8.8

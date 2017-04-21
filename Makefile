@@ -2,7 +2,7 @@ COM=g++
 
 CFLAGS=-std=c++11 -pedantic
 
-TARGET=traceroute
+TARGET=trace
 
 all:$(TARGET)
 
