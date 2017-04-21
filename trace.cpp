@@ -230,25 +230,24 @@ int main (int argc, char *argv[])
               struct sockaddr_in6 * source_addr =(struct sockaddr_in6 *) SO_EE_OFFENDER(sock_err);
               inet_ntop(AF_INET6, &(source_addr->sin6_addr), response_source_addr, sizeof(response_source_addr));
               DEB("err type: "<<(int)sock_err->ee_type<<" err code:"<<(int)sock_err->ee_type<<" response_source_addr: "<<response_source_addr<<endl);
+
+              //converting target host addr to string
+              char hostname[50]{0};
+              char servname[50]  {0};
+              string str_host_name{""};
+              if(getnameinfo((const sockaddr *)source_addr,sizeof(*source_addr),hostname,50,servname,50,0)== 0)
+              {
+                 str_host_name+=hostname;
+                 str_host_name+=" (";
+                 str_host_name+=response_source_addr;
+                 str_host_name+=")";
+              }
+              else str_host_name+=response_source_addr;
+
               // TTL was exceeded
               if(sock_err->ee_type == ICMP6_TIME_EXCEEDED &&
                  sock_err->ee_code == ICMP6_TIME_EXCEED_TRANSIT)
               {
-
-                //converting target host addr to string
-    				    char hostname[50]{0};
-      			  	char servname[50]  {0};
-                string str_host_name{""};
-      			  	if(getnameinfo((const sockaddr *)source_addr,sizeof(*source_addr),hostname,50,servname,50,0)== 0)
-      			  	{
-                   str_host_name+=hostname;
-                   str_host_name+=" (";
-                   str_host_name+=response_source_addr;
-                   str_host_name+=")";
-    		      	}
-                else str_host_name+=response_source_addr;
-
-
                 fprintf(stdout, "%2d   %s   %.3f ms\n",counter,str_host_name.c_str(),time_delta );
                 DEB( "ICMP time exceeded Error\n");
               }
@@ -294,23 +293,23 @@ int main (int argc, char *argv[])
               inet_ntop(AF_INET, &(source_addr->sin_addr), response_source_addr, sizeof(response_source_addr));
               DEB("err type: "<<(int)sock_err->ee_type<<" err code:"<<(int)sock_err->ee_type<<" response_source_addr: "<<response_source_addr<<endl);
 
+              //converting target host addr to string
+              char hostname[50]{0};
+              char servname[50]  {0};
+              string str_host_name{""};
+              if(getnameinfo((const sockaddr *)source_addr,sizeof(*source_addr),hostname,50,servname,50,0)== 0)
+              {
+                str_host_name+=hostname;
+                str_host_name+=" (";
+                str_host_name+=response_source_addr;
+                str_host_name+=")";
+              }
+              else str_host_name+=response_source_addr;
+
+
               // TTL was exceeded
               if(sock_err->ee_type == ICMP_TIME_EXCEEDED && sock_err->ee_code == ICMP_EXC_TTL)
               {
-
-                //converting target host addr to string
-    				    char hostname[50]{0};
-      			  	char servname[50]  {0};
-                string str_host_name{""};
-      			  	if(getnameinfo((const sockaddr *)source_addr,sizeof(*source_addr),hostname,50,servname,50,0)== 0)
-      			  	{
-                   str_host_name+=hostname;
-                   str_host_name+=" (";
-                   str_host_name+=response_source_addr;
-                   str_host_name+=")";
-    		      	}
-                else str_host_name+=response_source_addr;
-
                 fprintf(stdout, "%2d   %s   %.3f ms\n",counter,str_host_name.c_str(),time_delta );
                 DEB( "ICMP time exceeded Error\n");
               }
