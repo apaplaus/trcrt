@@ -270,14 +270,13 @@ int main (int argc, char *argv[])
                  sock_err->ee_code == ICMP6_TIME_EXCEED_TRANSIT)
               {
 
-      			  	//converting target address to host name
-      			  	char hostname[50]  {0};
+                //converting target host addr to string
+    				    char hostname[50]{0};
       			  	char servname[50]  {0};
-      			  	if(getnameinfo((const sockaddr *)source_addr,sizeof(source_addr),hostname,50,servname,50,0)== 0)
+      			  	if(getnameinfo((const sockaddr *)source_addr,sizeof(*source_addr),hostname,50,servname,50,0)== 0)
       			  	{
-      			   	  cout<<"target host name :"<<hostname<<endl;
-      	      	}
-      			  	else cout<<"Can't get target host name\n";
+    			   	       response_source_addr = hostname;
+    		      	}
 
 
                 fprintf(stdout, "%2d   %s   %.3f ms\n",counter,response_source_addr,time_delta );
@@ -320,7 +319,7 @@ int main (int argc, char *argv[])
             }
             else if(sock_err->ee_origin == SO_EE_ORIGIN_ICMP)
             {
-              char response_source_addr[40]{0};
+              char response_source_addr[50]{0};
               struct sockaddr_in * source_addr =(struct sockaddr_in *) SO_EE_OFFENDER(sock_err);
               inet_ntop(AF_INET, &(source_addr->sin_addr), response_source_addr, sizeof(response_source_addr));
               DEB("err type: "<<(int)sock_err->ee_type<<" err code:"<<(int)sock_err->ee_type<<" response_source_addr: "<<response_source_addr<<endl);
@@ -334,10 +333,8 @@ int main (int argc, char *argv[])
       			  	char servname[50]  {0};
       			  	if(getnameinfo((const sockaddr *)source_addr,sizeof(*source_addr),hostname,50,servname,50,0)== 0)
       			  	{
-    			   	  cout<<"target host name :"<<hostname<<endl;
+    			   	       response_source_addr = hostname;
     		      	}
-    			 	    else cout<<"Can't get target host name\n";
-
 
                 fprintf(stdout, "%2d   %s   %.3f ms\n",counter,response_source_addr,time_delta );
                 DEB( "ICMP time exceeded Error\n");
