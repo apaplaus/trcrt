@@ -275,7 +275,9 @@ int main (int argc, char *argv[])
       			  	char servname[50]  {0};
       			  	if(getnameinfo((const sockaddr *)source_addr,sizeof(*source_addr),hostname,50,servname,50,0)== 0)
       			  	{
-    			   	       response_source_addr = hostname;
+                     [&response_source_addr,&hostname]{
+                       for(int i =0;i<50 ;i++) response_source_addr[i] = hostname[i];
+                     };
     		      	}
 
 
@@ -333,7 +335,9 @@ int main (int argc, char *argv[])
       			  	char servname[50]  {0};
       			  	if(getnameinfo((const sockaddr *)source_addr,sizeof(*source_addr),hostname,50,servname,50,0)== 0)
       			  	{
-    			   	       response_source_addr = hostname;
+                  [&response_source_addr,&hostname]{
+                    for(int i =0;i<50 ;i++) response_source_addr[i] = hostname[i];
+                  };
     		      	}
 
                 fprintf(stdout, "%2d   %s   %.3f ms\n",counter,response_source_addr,time_delta );
