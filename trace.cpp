@@ -37,38 +37,6 @@ const int WAIT_TIME = 2;
 char MAX_TTL = 30;
 const char * PORT = "33434";
 
-// void  GetIp(){
-//   char buffer[34]{0};
-//   int buflen=34;
-//    int sock = socket(AF_INET, SOCK_DGRAM, 0);
-//
-//    const char* kGoogleDnsIp = "8.8.8.8";
-//    uint16_t kDnsPort = 53;
-//    struct sockaddr_in serv;
-//    memset(&serv, 0, sizeof(serv));
-//    serv.sin_family = AF_INET;
-//    serv.sin_addr.s_addr = inet_addr(kGoogleDnsIp);
-//    serv.sin_port = htons(kDnsPort);
-//
-//    int err = connect(sock, (const sockaddr*) &serv, sizeof(serv));
-//
-//    sockaddr_in name;
-//    socklen_t namelen = sizeof(name);
-//    err = getsockname(sock, (sockaddr*) &name, &namelen);
-//
-//    const char* p = inet_ntop(AF_INET, &name.sin_addr, buffer, buflen);
-//
-//    cout<<"address: "<<p<<endl;
-//    close(sock);
-// }
-
-// string ConvertToBin(char ch){
-//   string result {};
-//   for(int i =7;i>=0;i--){
-//     result.append(1, (ch>>i & 0x1) + '0');
-//   }
-//   return result;
-// }
 
 //parsing arguments
 int ParseArgs(char** argv,int argc,char &max_ttl,char &ttl, char * &dest_addr){
@@ -102,8 +70,8 @@ int main (int argc, char *argv[])
   char ttl = 1;
   char * dest_addr;
   if(ParseArgs(argv, argc, MAX_TTL, ttl, dest_addr) == -1){
-	cerr<<"Wrong programm arguments\n";
-	return -1;
+  	cerr<<"Wrong programm arguments\n";
+  	return -1;
   }
   //set version of ip protocol
   bool prot_ver6 = string(dest_addr).find(':') == string::npos ? 0 : 1;
@@ -124,10 +92,7 @@ int main (int argc, char *argv[])
    exit(-1);
   }
   char buf[100] = { 0 };
-  // if (setsockopt(send_sock, SOL_SOCKET, SO_REUSEADDR, &ONE, sizeof(ONE)) == -1) {
-  //   cerr<<"Error:setsockopt";
-  //   exit(-1);
-  // }
+
 
 
   struct addrinfo hints, *servinfo;
@@ -277,7 +242,7 @@ int main (int argc, char *argv[])
       			  	if(getnameinfo((const sockaddr *)source_addr,sizeof(*source_addr),hostname,50,servname,50,0)== 0)
       			  	{
                    str_host_name+=hostname;
-                   str_host_name+="(";
+                   str_host_name+=" (";
                    str_host_name+=response_source_addr;
                    str_host_name+=")";
     		      	}
@@ -312,13 +277,13 @@ int main (int argc, char *argv[])
                       break;
                   //Packet reachead
                   case ICMP6_DST_UNREACH_NOPORT :
-                      fprintf(stdout, "%2d   %s   %.3f ms\n",counter,response_source_addr,time_delta );
+                      fprintf(stdout, "%2d   %s   %.3f ms\n",counter,str_host_name.c_str(),time_delta );
                       DEB("Packet reached destination!\n");
                       close(send_sock);
                       exit(0);
                       break;
                   default:
-                    cerr<<"Default branch\n";
+                    cerr<<"Unknown error\n";
                 }
               }
             }
@@ -340,7 +305,7 @@ int main (int argc, char *argv[])
       			  	if(getnameinfo((const sockaddr *)source_addr,sizeof(*source_addr),hostname,50,servname,50,0)== 0)
       			  	{
                    str_host_name+=hostname;
-                   str_host_name+="(";
+                   str_host_name+=" (";
                    str_host_name+=response_source_addr;
                    str_host_name+=")";
     		      	}
@@ -371,13 +336,13 @@ int main (int argc, char *argv[])
                       break;
                   //Packet reachead destination
                   case ICMP_PORT_UNREACH :
-                      fprintf(stdout, "%2d   %s   %.3f ms\n",counter,response_source_addr,time_delta );
+                      fprintf(stdout, "%2d   %s   %.3f ms\n",counter,str_host_name.c_str(),time_delta );
                       DEB("Packet reached destination!\n");
                       close(send_sock);
                       exit(0);
                       break;
                   default:
-                    cerr<<"Default branch\n";
+                    cerr<<"Unknown error\n";
                 }
               }
             }
