@@ -273,15 +273,18 @@ int main (int argc, char *argv[])
                 //converting target host addr to string
     				    char hostname[50]{0};
       			  	char servname[50]  {0};
+                string str_host_name{""};
       			  	if(getnameinfo((const sockaddr *)source_addr,sizeof(*source_addr),hostname,50,servname,50,0)== 0)
       			  	{
-                     [&response_source_addr,&hostname]{
-                       for(int i =0;i<50 ;i++) response_source_addr[i] = hostname[i];
-                     };
+                   str_host_name+=hostname;
+                   str_host_name+="(";
+                   str_host_name+=response_source_addr;
+                   str_host_name+=")";
     		      	}
+                else str_host_name+=response_source_addr;
 
 
-                fprintf(stdout, "%2d   %s   %.3f ms\n",counter,response_source_addr,time_delta );
+                fprintf(stdout, "%2d   %s   %.3f ms\n",counter,str_host_name.c_str(),time_delta );
                 DEB( "ICMP time exceeded Error\n");
               }
               else if(sock_err->ee_type == ICMP6_DST_UNREACH){
@@ -333,14 +336,17 @@ int main (int argc, char *argv[])
                 //converting target host addr to string
     				    char hostname[50]{0};
       			  	char servname[50]  {0};
+                string str_host_name{""};
       			  	if(getnameinfo((const sockaddr *)source_addr,sizeof(*source_addr),hostname,50,servname,50,0)== 0)
       			  	{
-                  [&response_source_addr,&hostname]{
-                    for(int i =0;i<50 ;i++) response_source_addr[i] = hostname[i];
-                  };
+                   str_host_name+=hostname;
+                   str_host_name+="(";
+                   str_host_name+=response_source_addr;
+                   str_host_name+=")";
     		      	}
+                else str_host_name+=response_source_addr;
 
-                fprintf(stdout, "%2d   %s   %.3f ms\n",counter,response_source_addr,time_delta );
+                fprintf(stdout, "%2d   %s   %.3f ms\n",counter,str_host_name.c_str(),time_delta );
                 DEB( "ICMP time exceeded Error\n");
               }
               else if(sock_err->ee_type == ICMP_DEST_UNREACH){
