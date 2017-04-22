@@ -10,6 +10,23 @@ trace \- Small application for tracing a net path.
 .B trace
 tracks the route packets taken from an IP network on their way to a given host.
 It's uses UDP protocol for sending ICMP packets to host with incrementing TTL of each packet.
+.PP
+In case of errors host, network, protocol unreachable and communication administratively prohibited, the symbols H!, N!, P!, X! will be written accordingly.
+.PP
+In case of timeout, appropriate row will be marked with '*'.
+.TP
+Possible output can look like this:
+  trace 8.8.8.8
+  1   bda-boz.fit.vutbr.cz (147.229.176.1)   0.515 ms
+  2   pe-meo.net.vutbr.cz (147.229.254.217)   1.060 ms
+  3   pe-ant.net.vutbr.cz (147.229.252.90)   0.854 ms
+  4   rt-ant.net.vutbr.cz (147.229.253.233)   0.155 ms
+  5   r98-bm.cesnet.cz (147.229.252.17)   0.650 ms
+  6   195.113.235.109 (195.113.235.109)   5.371 ms
+  7   r2-r93.cesnet.cz (195.113.157.70)   5.258 ms
+  8   108.170.245.33   4.871 ms
+  9   108.170.235.149   5.210 ms
+ 10   google-public-dns-a.google.com (8.8.8.8)   4.897 ms
 .SH OPTIONS
 .TP
 .BR -f \ \fIFIRST_TTL\fR
@@ -21,11 +38,19 @@ Specifies maximum TTL value for packets. Default value is 30.
 .BR address
 IPV4/IPV6 host address.
 .SH EXAMPLES
+To trace path to google.com use:
+.PP
+.nf
+.RS
+\fBtrace\fR www.google.com
+.RE
+.fi
+.PP
 To trace path to address 172.217.23.238 with  first TTL 3 use:
 .PP
 .nf
 .RS
-trace -f 3 172.217.23.238
+\fBtrace\fR -f 3 172.217.23.238
 .RE
 .fi
 .PP
@@ -33,7 +58,7 @@ To trace path to 2a00:1450:400d:802::1000 with max TTL 10 use:
 .PP
 .nf
 .RS
-trace -m 10 2a00:1450:400d:802::1000
+\fBtrace\fR -m 10 2a00:1450:400d:802::1000
 .RE
 .fi
 .SH SEE ALSO

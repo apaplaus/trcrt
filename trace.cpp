@@ -1,12 +1,8 @@
 #include <iostream>
 #include <sys/socket.h>
-// #include <sys/stat.h>
 #include <sys/time.h>
 #include <netdb.h>
-// #include <netinet/in.h>
-// #include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
-// #include <netinet/udp.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <cstring>
@@ -76,7 +72,7 @@ int main (int argc, char *argv[])
   //set version of ip protocol
   bool prot_ver6 = string(dest_addr).find(':') == string::npos ? 0 : 1;
 
-
+  //stuctures for calculating time delay
   struct timeval ts,tf;
   struct timezone tz;
   if (argc >6  || argc < 2){
@@ -91,7 +87,6 @@ int main (int argc, char *argv[])
    cerr<< "ERROR: creating send socket"<<"\n";
    exit(-1);
   }
-  char buf[100] = { 0 };
 
 
 
@@ -107,7 +102,6 @@ int main (int argc, char *argv[])
 		return -1;
 	}
 
-  // inet_pton (AF_INET, dest_addr, &(addr.sin_addr));
   if(prot_ver6){
     if(setsockopt(send_sock, IPPROTO_IPV6, IPV6_RECVERR, &ONE,sizeof(ONE))){
       cerr<<"ERROR: can't set IP_RECVERR option for socket\n";
@@ -137,7 +131,7 @@ int main (int argc, char *argv[])
   };
   int counter =1;
 
-
+  //main cycle for sending, recieving and analizing packets
   while (ttl <= MAX_TTL)
   {
       if(prot_ver6){
@@ -158,12 +152,10 @@ int main (int argc, char *argv[])
 
 
       DEB("Start sending"<<endl);
-      // sendto (send_sock, buf, 0, 0, (struct sockaddr*) &addr, sizeof addr);
       sendto(send_sock, "",	0, 0, servinfo->ai_addr, servinfo->ai_addrlen);
       gettimeofday(&ts, &tz);
 
 
-      char buff[1024] = { 0 };
       struct iovec iov;
       sock_union addr2;
       sock_union remote;
@@ -173,9 +165,6 @@ int main (int argc, char *argv[])
       struct sock_extended_err *sock_err;
       char buffer[1024] {0};
       if(prot_ver6){
-        // struct sockaddr_in6 addr2;
-        // struct sockaddr_in6 remote;
-        // struct icmp6_hdr icmphd2;
         iov.iov_len = sizeof(struct icmp6_hdr);
         iov.iov_base = &(icmphd2.v6);
         msg.msg_name = (void*)&(remote.v6);
@@ -201,13 +190,13 @@ int main (int argc, char *argv[])
           DEB("No response were recieved, timeout expired\n");
           fprintf(stdout, "%2d   *\n",counter);
           ttl++;
-		  counter++;
+		      counter++;
           continue;
           break;
         case -1:
           ttl++;
           DEB("error was occured!\n");
-		  counter++;
+		      counter++;
           continue;
           break;
         default:
